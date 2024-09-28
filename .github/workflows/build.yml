@@ -1,42 +1,39 @@
-name: CI
+name: Build Kivy App
+
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main  # Change to your default branch
+  pull_request:
+    branches:
+      - main  # Change to your default branch
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-      used to cache dependencies with a timeout
-      - name: Get Date
-        id: get-date
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'  # Use a compatible Python version
+
+      - name: Install Buildozer
         run: |
-          echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
-        shell: bash
+          pip install --upgrade pip
+          pip install buildozer
+          sudo apt-get install -y python3-pip python3-setuptools git zip unzip
 
-      - name: Cache Buildozer global directory
-        uses: actions/cache@v2
-        with:
-          path: .buildozer_global
-          key: buildozer-global-${{ hashFiles('buildozer.spec') }} # Replace with your path
+      - name: Build the App
+        run: |
+          cd path/to/your/app  # Change this to your app directory
+          buildozer android debug  # You can change this to `release` if needed
 
-      - uses: actions/cache@v2
-        with:
-          path: .buildozer
-          key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
-
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
-          buildozer_version: stable
-
-      - name: Upload artifacts
+      - name: Upload APK
         uses: actions/upload-artifact@v2
         with:
-          name: package
-          path: ${{ steps.buildozer.outputs.filename }}
+          name: myapp-apk
+          path: ${{ steps.buildozer.outputs.filename }}  # Change this to match your APK output location
